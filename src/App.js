@@ -51,7 +51,8 @@ const App = () => {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch('http://10.106.182.29:5000/api/status')
+      // fetch('http://10.10.186.59:3009/api/status')
+      fetch('http://127.0.0.1:5000/api/status')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');

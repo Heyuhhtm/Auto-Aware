@@ -1,9 +1,1 @@
-- [ ] Modify src/App.js: Add activeTab state ('dashboard' or 'analytics')
-- [ ] Modify src/App.js: Add accidents state array to store {lat, lon, timestamp} when status === "CRITICAL"
-- [ ] Modify src/App.js: Update fetchData to append to accidents on "CRITICAL" status
-- [ ] Modify src/App.js: Add tab navigation buttons
-- [ ] Modify src/App.js: Add conditional rendering for Dashboard and Analytics tabs
-- [ ] Create src/AnalyticsTab.js: Component to display map with accident markers and frequency list
-- [ ] Test tab switching and data fetching
-- [ ] Verify accident storage only on "CRITICAL" status
-- [ ] Ensure Analytics map and list display correctly
+
