@@ -1,3 +1,5 @@
+import LoadingPage from "./loading";
+
 import React, { useState, useEffect } from 'react';
 import AnalyticsTab from './AnalyticsTab';
 
@@ -41,6 +43,7 @@ const IconSpeedometer = ({ size, className }) => (
 
 
 const App = () => {
+  const [showLoading, setShowLoading] = useState(true);
   const [isEmergency, setIsEmergency] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +106,10 @@ const App = () => {
   // }, [data?.last_data?.location?.lat, data?.last_data?.location?.lon]);
 
   const toggleView = () => setIsEmergency(!isEmergency);
+
+  if (showLoading) {
+    return <LoadingPage onFinish={() => setShowLoading(false)} />;
+  }
 
   if (loading) {
     return (

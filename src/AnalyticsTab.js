@@ -1,8 +1,39 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+import iconMarker from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix for default marker icon missing in React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: iconRetina,
+  iconUrl: iconMarker,
+  shadowUrl: iconShadow,
+});
 
 const AnalyticsTab = ({ accidents }) => {
   // State to track which location is currently selected for the map view
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [blackspots, setBlackspots] = useState([]);
+
+  useEffect(() => {
+    // Fetch the Danger Zones from your Python Server
+    const fetchBlackspots = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/analytics/blackspots');
+        const data = await response.json();
+        console.log("🔥 Loaded Blackspots:", data); // Check console to verify
+        setBlackspots(data);
+      } catch (error) {
+        console.error("Error loading blackspots:", error);
+      }
+    };
+
+    fetchBlackspots();
+  }, []);
 
   // Process raw accident data into grouped statistics
   const locationStats = useMemo(() => {
@@ -35,6 +66,13 @@ const AnalyticsTab = ({ accidents }) => {
       setSelectedLocation(locationStats[0]);
     }
   }, [locationStats, selectedLocation]);
+
+  const mapCenter = useMemo(() => {
+    if (selectedLocation) {
+      return [Number(selectedLocation.lat), Number(selectedLocation.lon)];
+    }
+    return [0, 0]; // A default center
+  }, [selectedLocation]);
 
   return (
     <div className="w-full max-w-6xl flex flex-col gap-6 animate-fade-in">
@@ -100,22 +138,36 @@ const AnalyticsTab = ({ accidents }) => {
               Hotspot Visualization
             </h3>
             <div className="rounded-2xl overflow-hidden h-96 shadow-lg relative bg-gray-200 dark:bg-gray-900">
-              {selectedLocation ? (
-                <iframe
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  scrolling="no"
-                  marginHeight="0"
-                  marginWidth="0"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedLocation.lon-0.005}%2C${selectedLocation.lat-0.005}%2C${selectedLocation.lon+0.005}%2C${selectedLocation.lat+0.005}&layer=mapnik&marker=${selectedLocation.lat}%2C${selectedLocation.lon}`}
-                  title="Hotspot Location"
+              <MapContainer
+                center={mapCenter}
+                zoom={14}
+                style={{ height: '100%', width: '100%' }}
+                key={selectedLocation ? selectedLocation.id : 'default-map'}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  Select a location to view map
-                </div>
-              )}
+                {/* Existing Marker for the Accident */}
+                {selectedLocation && <Marker position={mapCenter} />}
+
+                {/* --- NEW: Draw Danger Zones --- */}
+                {blackspots.map((zone, index) => (
+                  <Circle
+                    key={index}
+                    center={[zone.lat, zone.lng || zone.lon]}
+                    radius={300} // Radius in meters (e.g., 300m zone)
+                    pathOptions={{
+                      color: zone.color,         // Corresponds to strokeColor
+                      opacity: 0.8,              // Corresponds to strokeOpacity
+                      weight: 2,                 // Corresponds to strokeWeight
+                      fillColor: zone.color,     // Same color fill
+                      fillOpacity: 0.35,         // Transparent so you can see roads underneath
+                      interactive: false,        // Corresponds to clickable: false
+                    }}
+                  />
+                ))}
+              </MapContainer>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
               * Map shows the selected hotspot location.
