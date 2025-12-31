@@ -54,8 +54,8 @@ const App = () => {
 
   useEffect(() => {
     const fetchData = () => {
-      // fetch('http://10.10.186.59:3009/api/status')
-      fetch('http://127.0.0.1:5000/api/status')
+       fetch('http://10.106.182.29:5000/api/status')
+      //fetch('http://127.0.0.1:5000/api/status')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -172,30 +172,38 @@ const App = () => {
             {/* Patient Info */}
             <div className="rounded-2xl p-6 bg-gray-200 dark:bg-gray-800 shadow-lg flex flex-col">
               <h2 className="text-lg font-semibold mb-4">Patient Info</h2>
-              <p><strong>Name:</strong> {data?.last_data?.Name || 'N/A'}</p>
-              <p><strong>Blood Type:</strong> {data?.patient_info?.blood_type || 'N/A'}</p>
+              <p><strong>Name:</strong> {data?.last_data?.user_details?.name || 'N/A'}</p>
+              <p><strong>Blood Type:</strong> {data?.last_data?.user_details?.blood_type || 'N/A'}</p>
       
-        
+            {/* },
+    "user_details": {
+      "blood_type": "O+",
+      "conditions": "Asthma, Peanut Allergy",
+      "emergency_contact": null,
+      "name": "Rohan Sharma"
+    }
+  }, */}
               <p><strong>Location: Lat:</strong> {data?.last_data?.location?.lat || 'N/A'}</p>
               <p><strong>Location: Lon:</strong> {data?.last_data?.location?.lon || 'N/A'}</p>
-              <p><strong>Address:</strong> {address}</p>
+              <p><strong>Health Conditions:</strong> {data?.last_data?.user_details?.conditions || 'N/A'}</p>
+              {/* <p><strong>Address:</strong> {address}</p> */}
             </div>
 
             {/* Vitals */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl bg-gray-200 dark:bg-gray-800 flex flex-col items-center">
-                <IconHeart size={40} className="text-red-500 mb-2" />
+            
                 <span className="text-xl font-bold">{data?.last_data?.impact?.g_force || 'N/A'} G</span>
                 <span className="text-sm text-gray-500">Impact Force</span>
               </div>
               
               <div className="p-4 rounded-xl bg-gray-200 dark:bg-gray-800 flex flex-col items-center">
-                <IconWarning size={40} className="text-yellow-500 mb-2" />
+        
                 <span className="text-xl font-bold">{data?.last_data?.environment?.is_voice_detected ? 'Detected' : 'None'}</span>
-                <span className="text-sm text-gray-500">Voice Detection</span>
+                <span className="text-sm text-gray-500">Crash Detection</span>
               </div>
               <div className="p-4 rounded-xl bg-gray-200 dark:bg-gray-800 flex flex-col items-center">
-                <IconCall size={40} className="text-green-500 mb-2" />
+            
                 <span className="text-xl font-bold">{data?.last_data?.manual_override?.sos_button_pressed ? 'Pressed' : 'Not Pressed'}</span>
                 <span className="text-sm text-gray-500">SOS Status</span>
               </div>

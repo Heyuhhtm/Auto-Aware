@@ -23,7 +23,7 @@ const AnalyticsTab = ({ accidents }) => {
     // Fetch the Danger Zones from your Python Server
     const fetchBlackspots = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/analytics/blackspots');
+        const response = await fetch('http://10.106.182.29:5000/api/analytics/blackspots');
         const data = await response.json();
         console.log("🔥 Loaded Blackspots:", data); // Check console to verify
         setBlackspots(data);
@@ -67,12 +67,15 @@ const AnalyticsTab = ({ accidents }) => {
     }
   }, [locationStats, selectedLocation]);
 
-  const mapCenter = useMemo(() => {
-    if (selectedLocation) {
-      return [Number(selectedLocation.lat), Number(selectedLocation.lon)];
-    }
-    return [0, 0]; // A default center
-  }, [selectedLocation]);
+ const mapCenter = useMemo(() => {
+  if (blackspots.length > 0) {
+    return [blackspots[0].lat, blackspots[0].lng];
+  }
+  if (selectedLocation) {
+    return [Number(selectedLocation.lat), Number(selectedLocation.lon)];
+  }
+  return [26.9124, 75.7873]; // Jaipur default
+}, [blackspots, selectedLocation]);
 
   return (
     <div className="w-full max-w-6xl flex flex-col gap-6 animate-fade-in">
@@ -83,53 +86,45 @@ const AnalyticsTab = ({ accidents }) => {
           {/* Left Column: Frequency List */}
           <div className="flex-1">
             <h3 className="text-lg font-semibold mb-3 text-gray-600 dark:text-gray-300">
-              Identified Hotspots ({locationStats.length})
-            </h3>
-            <div className="bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
-              {locationStats.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">No accident data recorded yet.</div>
-              ) : (
-                <table className="w-full text-left">
-                  <thead className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                    <tr>
-                      <th className="p-3 text-sm">Location</th>
-                      <th className="p-3 text-sm">Frequency</th>
-                      <th className="p-3 text-sm">Last Incident</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {locationStats.map((stat) => (
-                      <tr 
-                        key={stat.id}
-                        onClick={() => setSelectedLocation(stat)}
-                        className={`cursor-pointer transition-colors border-b dark:border-gray-800 ${
-                          selectedLocation?.id === stat.id 
-                            ? 'bg-blue-100 dark:bg-blue-900' 
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                        }`}
-                      >
-                        <td className="p-3 text-sm font-mono">
-                          {Number(stat.lat).toFixed(3)}, {Number(stat.lon).toFixed(3)}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold">{stat.count}</span>
-                            {/* Simple bar chart visualization */}
-                            <div 
-                              className="h-2 bg-red-500 rounded-full" 
-                              style={{ width: `${Math.min(stat.count * 10, 100)}px` }}
-                            ></div>
-                          </div>
-                        </td>
-                        <td className="p-3 text-xs text-gray-500">
-                          {new Date(stat.lastTime).toLocaleTimeString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+  Identified Hotspots ({blackspots.length})
+</h3>
+
+<div className="bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
+  {blackspots.length === 0 ? (
+    <div className="p-4 text-center text-gray-500">
+      No hotspots identified yet.
+    </div>
+  ) : (
+    <table className="w-full text-left">
+      <thead className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+        <tr>
+          <th className="p-3 text-sm">Severity</th>
+          <th className="p-3 text-sm">Location</th>
+          <th className="p-3 text-sm">Frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {blackspots.map((zone, index) => (
+          <tr
+            key={index}
+            className="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <td className="p-3 font-semibold" style={{ color: zone.color }}>
+              {zone.severity}
+            </td>
+            <td className="p-3 text-sm font-mono">
+              {zone.lat.toFixed(3)}, {zone.lng.toFixed(3)}
+            </td>
+            <td className="p-3 font-bold">
+              {zone.count}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
+
           </div>
 
           {/* Right Column: Map View */}
@@ -153,20 +148,18 @@ const AnalyticsTab = ({ accidents }) => {
 
                 {/* --- NEW: Draw Danger Zones --- */}
                 {blackspots.map((zone, index) => (
-                  <Circle
-                    key={index}
-                    center={[zone.lat, zone.lng || zone.lon]}
-                    radius={300} // Radius in meters (e.g., 300m zone)
-                    pathOptions={{
-                      color: zone.color,         // Corresponds to strokeColor
-                      opacity: 0.8,              // Corresponds to strokeOpacity
-                      weight: 2,                 // Corresponds to strokeWeight
-                      fillColor: zone.color,     // Same color fill
-                      fillOpacity: 0.35,         // Transparent so you can see roads underneath
-                      interactive: false,        // Corresponds to clickable: false
-                    }}
-                  />
-                ))}
+  <Circle
+    key={index}
+    center={[zone.lat, zone.lng]}
+    radius={zone.count * 120}
+    pathOptions={{
+      color: zone.color,
+      fillColor: zone.color,
+      fillOpacity: 0.45,
+      weight: 2
+    }}
+  />
+))}
               </MapContainer>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
